@@ -1,0 +1,99 @@
+from tkinter import *
+from math import *
+reps=1
+work_min=25
+long_break=20
+short_break=5
+timer=None
+count_min=0
+count_sec=0
+is_paused=False
+time_remaining=0
+
+def start_timer():
+    global reps,is_paused,time_remaining
+
+    if is_paused:
+        is_paused = False
+        pause_button.config(text="Pause")  # Switch button look back
+        count_down(time_remaining)
+        return
+
+    if reps == 8:
+        canvas.itemconfig(header_timer, text="Long Break", fill="blue")
+        count_down(long_break*60 )
+    elif reps % 2 == 0:
+        canvas.itemconfig(header_timer, text="Break", fill="pink")
+        count_down(short_break *60)
+    else:
+        canvas.itemconfig(header_timer, text="Work", fill="green")
+        count_down(work_min*60 )
+def count_down(count):
+    global timer,count_min,count_sec,time_remaining
+    global reps
+
+    time_remaining=count
+    if count>=0:
+        timer=window.after(1000,count_down,count-1)
+        count_min=floor(count/60)
+        if count_min<=9:
+            count_min=f"0{count_min}"
+        count_sec=count%60
+        if count_sec<=9:
+            count_sec=f"0{count_sec}"
+        canvas.itemconfig(counting_label,text=f"{count_min}:{count_sec}")
+    else:
+        reps+=1
+        start_timer()
+
+def reset_timer():
+    global timer
+    canvas.itemconfig(counting_label,text="00:00")
+    canvas.itemconfig(header_timer,text="timer")
+    window.after_cancel(timer)
+
+def pause_timer():
+    global timer,is_paused
+
+        # If the timer hasn't even started yet, do nothing
+    if timer is None and time_remaining == 0:
+        return
+
+    if not is_paused:
+        # 1. PAUSE ACTION
+        is_paused = True
+        window.after_cancel(timer)  # Stop the loop ticket
+        pause_button.config(text="Resume")  # Correct way to change button text
+    else:
+        # 2. RESUME ACTION
+        is_paused = False
+        pause_button.config(text="Pause")
+        count_down(time_remaining)
+
+
+window=Tk()
+window.minsize(400,400)
+window.title("pomodoro")
+
+canvas=Canvas(bg="red",width=400,height=400, highlightthickness=0)
+image=PhotoImage(file="images.png")
+canvas.create_image(200,200 ,image=image)
+canvas.grid(column=1,row=1)
+
+
+counting_label=canvas.create_text(200,190,text="00:00",font=("arial",30,"bold"))
+header_timer=canvas.create_text(200,20,text="timer",font=("arial",30,"italic"))
+#
+#
+start_button=Button(text="start",command=start_timer)
+start_button.grid(column=0,row=3)
+
+reset_button=Button(text="reset",command=reset_timer)
+reset_button.grid(column=2,row=3)
+
+pause_button=Button(text="pause",command=pause_timer)
+pause_button.grid(column=1,row=3)
+
+
+
+window.mainloop()
